@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 SELECT 'up SQL query';
 
-CREATE TABLE IF NOT EXISTS notes (
+CREATE TABLE IF NOT EXISTS pastas (
     id INTEGER PRIMARY KEY,
     content TEXT NOT NULL,
     ttl INTEGER NOT NULL DEFAULT 0,
