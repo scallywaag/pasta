@@ -1,39 +1,69 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/scallywaag/pasta-v1/helpers"
 )
 
 type Pasta struct {
-	Content string `json:"content"`
-	Ttl     int    `json:"ttl"`
+	ID        int
+	Content   string `json:"content"`
+	TTL       int    `json:"ttl"`
+	CreatedAt string
 }
 
-func createRouter() *http.ServeMux {
+func createRouter(db *sql.DB) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("POST /pasta", func(w http.ResponseWriter, r *http.Request) {
 		var pasta Pasta
-
 		if err := json.NewDecoder(r.Body).Decode(&pasta); err != nil {
 			http.Error(w, "Invalid JSON body: "+err.Error(), http.StatusBadRequest)
 			return
 		}
 		defer r.Body.Close()
 
-		helpers.PrintJson(pasta)
+		result, err := db.Exec("INSERT INTO pastas(content, ttl) VALUES(?,?)", &pasta.Content, &pasta.TTL)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		lastID, err := result.LastInsertId()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		s := fmt.Sprintf("Created entity ID: %d", lastID)
+		fmt.Println(s)
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("POST received"))
+		w.Write([]byte(s))
 	})
 
 	mux.HandleFunc("GET /pasta/{id}", func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("id")
-		fmt.Fprintf(w, "getting pasta with id=%v\n", id)
+		var pasta Pasta
+
+		err := db.QueryRow("SELECT id, content, ttl, created_at FROM pastas WHERE id = ?", id).
+			Scan(&pasta.ID, &pasta.Content, &pasta.TTL, &pasta.CreatedAt)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				http.Error(w, "Pasta not found", http.StatusNotFound)
+				return
+			}
+			http.Error(w, "Database error", http.StatusInternalServerError)
+			return
+		}
+
+		s := fmt.Sprintf("Found entity: %+v", helpers.Prettify(pasta))
+		fmt.Println(s)
+
+		w.Write([]byte(s))
 	})
 
 	return mux

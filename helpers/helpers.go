@@ -5,11 +5,11 @@ import (
 	"fmt"
 )
 
-func PrintJson(s any) {
+func Prettify(s any) string {
 	pretty, err := json.MarshalIndent(s, "", "  ")
 	if err != nil {
 		fmt.Println("Failed to marshal:", err)
-	} else {
-		fmt.Println(string(pretty))
 	}
+
+	return string(pretty)
 }
