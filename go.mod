@@ -1,4 +1,4 @@
-module github.com/scallywaag/pasta-v1
+module github.com/scallywaag/pasta
 
 go 1.25.1
 

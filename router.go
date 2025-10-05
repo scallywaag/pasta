@@ -7,7 +7,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/scallywaag/pasta-v1/helpers"
+	"github.com/scallywaag/pasta/helpers"
 )
 
 type Pasta struct {
